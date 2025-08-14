@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe Game</title>
+    <style>
+        /* Basic styling for the entire page */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Title styling */
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Container for the game board */
+        .game-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* The game board - 3x3 grid */
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
+            grid-template-rows: repeat(3, 1fr);    /* 3 equal rows */
+            gap: 5px; /* Space between cells */
+            margin: 20px 0;
+            background-color: #333;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        /* Individual cells in the game board */
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: white;
+            border: none;
+            font-size: 36px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        /* Cell hover effect */
+        .cell:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Styling for X and O */
+        .cell.x {
+            color: #e74c3c; /* Red for X */
+        }
+
+        .cell.o {
+            color: #3498db; /* Blue for O */
+        }
+
+        /* Game status text */
+        .game-status {
+            font-size: 24px;
+            margin: 20px 0;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Reset button styling */
+        .reset-button {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .reset-button:hover {
+            background-color: #27ae60;
+        }
+
+        /* Winner celebration styling */
+        .winner {
+            color: #e74c3c;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Tic Tac Toe</h1>
+        
+        <!-- Game status display -->
+        <div id="gameStatus" class="game-status">Player X's Turn</div>
+        
+        <!-- The 3x3 game board -->
+        <div class="game-board" id="gameBoard">
+            <!-- Each cell has a data-index to identify its position -->
+            <button class="cell" data-index="0"></button>
+            <button class="cell" data-index="1"></button>
+            <button class="cell" data-index="2"></button>
+            <button class="cell" data-index="3"></button>
+            <button class="cell" data-index="4"></button>
+            <button class="cell" data-index="5"></button>
+            <button class="cell" data-index="6"></button>
+            <button class="cell" data-index="7"></button>
+            <button class="cell" data-index="8"></button>
+        </div>
+        
+        <!-- Reset button to start a new game -->
+        <button class="reset-button" onclick="resetGame()">New Game</button>
+    </div>
+
+    <script>
+        // Game variables
+        let currentPlayer = 'X'; // Keep track of whose turn it is
+        let gameBoard = ['', '', '', '', '', '', '', '', '']; // Array to store the game state
+        let gameActive = true; // Flag to check if game is still active
+
+        // All possible winning combinations (rows, columns, diagonals)
+        const winningConditions = [
+            [0, 1, 2], // Top row
+            [3, 4, 5], // Middle row
+            [6, 7, 8], // Bottom row
+            [0, 3, 6], // Left column
+            [1, 4, 7], // Middle column
+            [2, 5, 8], // Right column
+            [0, 4, 8], // Diagonal from top-left to bottom-right
+            [2, 4, 6]  // Diagonal from top-right to bottom-left
+        ];
+
+        // Get references to HTML elements
+        const cells = document.querySelectorAll('.cell');
+        const gameStatus = document.getElementById('gameStatus');
+
+        // Add click event listener to each cell
+        cells.forEach(cell => {
+            cell.addEventListener('click', handleCellClick);
+        });
+
+        // Function that runs when a cell is clicked
+        function handleCellClick(event) {
+            const clickedCell = event.target; // The cell that was clicked
+            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index')); // Get the cell's position
+
+            // Check if cell is already filled or game is over
+            if (gameBoard[clickedCellIndex] !== '' || !gameActive) {
+                return; // Exit the function if cell is taken or game is over
+            }
+
+            // Make the move
+            gameBoard[clickedCellIndex] = currentPlayer; // Update the game board array
+            clickedCell.textContent = currentPlayer; // Display X or O in the cell
+            clickedCell.classList.add(currentPlayer.toLowerCase()); // Add CSS class for styling
+
+            // Check if someone won or if it's a tie
+            checkResult();
+        }
+
+        // Function to check if there's a winner or tie
+        function checkResult() {
+            let roundWon = false;
+
+            // Check each winning condition
+            for (let i = 0; i < winningConditions.length; i++) {
+                const winCondition = winningConditions[i];
+                const a = gameBoard[winCondition[0]]; // First position in winning combo
+                const b = gameBoard[winCondition[1]]; // Second position in winning combo
+                const c = gameBoard[winCondition[2]]; // Third position in winning combo
+
+                // Skip if any position is empty
+                if (a === '' || b === '' || c === '') {
+                    continue;
+                }
+
+                // Check if all three positions have the same player
+                if (a === b && b === c) {
+                    roundWon = true;
+                    break; // Exit the loop since we found a winner
+                }
+            }
+
+            // If someone won
+            if (roundWon) {
+                gameStatus.textContent = `Player ${currentPlayer} Wins!`;
+                gameStatus.classList.add('winner'); // Add winner animation
+                gameActive = false; // Stop the game
+                return; // Exit the function
+            }
+
+            // Check for tie (all cells filled but no winner)
+            if (!gameBoard.includes('')) {
+                gameStatus.textContent = 'Game Tied!';
+                gameActive = false;
+                return;
+            }
+
+            // Switch to the other player
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            gameStatus.textContent = `Player ${currentPlayer}'s Turn`;
+        }
+
+        // Function to reset the game
+        function resetGame() {
+            currentPlayer = 'X'; // X always goes first
+            gameBoard = ['', '', '', '', '', '', '', '', '']; // Clear the board array
+            gameActive = true; // Reactivate the game
+            gameStatus.textContent = "Player X's Turn"; // Reset status message
+            gameStatus.classList.remove('winner'); // Remove winner animation
+
+            // Clear all cells
+            cells.forEach(cell => {
+                cell.textContent = ''; // Remove X or O from display
+                cell.classList.remove('x', 'o'); // Remove styling classes
+            });
+        }
+    </script>
+</body>
+</html>
